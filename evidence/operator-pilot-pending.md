@@ -47,13 +47,13 @@ Execution of an authoritative real-world pilot requires the following external i
 
 In alignment with the Stellar Project Approval Playbook and review standards, project findings and gaps are classified into five distinct severity tiers:
 
-| Class | Severity | Playbook Definition | LedgerParity Finding / Status | Carried Phase |
-|---|---|---|---|---|
-| **Class A** | **Critical Blocker** | Defect, authorization bypass, or missing evidence that blocks submission approval. Must be resolved before full acceptance. | **External Operator Validation**: Tooling is verified on synthetic fixtures, but independent real-world operator validation remains pending. Gate is **CONDITIONAL**. | Phase 5 / Phase 6 |
-| **Class B** | **Major / Architectural** | Significant architectural risk or upcoming ecosystem deprecation requiring a migration plan. | **Horizon Ingestion Deprecation**: Horizon is slated for eventual deprecation in favor of Stellar RPC. Current RPC lacks long-term indexed payment history parity; a future ingestion connector strategy must be designed. | Phase 3 |
-| **Class C** | **Moderate / Scope Boundary** | Bounded protocol capabilities that must be explicitly documented to prevent reviewer misunderstanding. | **Classic Payment Scope**: Ingestion is intentionally limited to classic `payment` operations. Path payments, Soroban contract balance events, and account creations/merges are outside core scope. | Phase 3 / Phase 4 |
-| **Class D** | **Minor / Robustness** | Ergonomic improvements, edge-case input handling, or secondary validations. | **Public Key and Account Parsing**: Adding StrKey checksum validation on public keys in CLI config (currently length/prefix checked); full bidirectional multiplexed account (`M...`) equivalence. | Phase 4 |
-| **Class E** | **Informational / Alignment** | Documentation precision and repository boundary separation. | **Decoupled Soroban Registry**: The optional report-hash contract (`-ledger-parity-contract`) must remain decoupled; documentation must reinforce that hash registration does not prove payment truth. | Phase 5 |
+| Class | Severity | Category | Playbook Definition | LedgerParity Finding / Status | Carried Phase |
+|---|---|---|---|---|---|
+| **Class A** | **Critical** | External Adoption | Defect, authorization bypass, or missing evidence that blocks submission approval. Must be resolved before full acceptance. | **External Operator Validation**: Tooling is verified on synthetic fixtures, but independent real-world operator validation remains pending. Gate is **CONDITIONAL**. | Phase 5 / Phase 6 |
+| **Class B** | **High** | Data Ingestion | Major architectural risk or upcoming ecosystem deprecation requiring a migration plan. | **Horizon Ingestion Deprecation**: Horizon is slated for eventual deprecation in favor of Stellar RPC. Current RPC lacks long-term indexed payment history parity; a future ingestion connector strategy must be designed without breaking current Horizon stability. | Phase 3 |
+| **Class C** | **Medium** | Scope Boundary | Bounded protocol capabilities that must be explicitly documented to prevent reviewer misunderstanding. | **Classic Payment Scope**: Ingestion is intentionally limited to classic `payment` operations. Path payments, Soroban contract balance events, and account creations/merges are outside core scope. | Phase 3 / Phase 4 |
+| **Class D** | **Low** | Validation Ergonomics | Ergonomic improvements, edge-case input handling, or secondary validations. | **Public Key and Account Parsing**: Adding StrKey checksum validation on public keys in CLI config (currently length/prefix checked); full bidirectional multiplexed account (`M...`) equivalence. | Phase 4 |
+| **Class E** | **Informational** | Scope Boundary | Documentation precision and repository boundary separation. | **Decoupled Soroban Registry**: The optional report-hash contract (`ledger-parity-contract`) must remain decoupled; documentation must reinforce that hash registration does not prove payment truth. | Phase 5 |
 
 ## 5. Conditional Gate Justification
 

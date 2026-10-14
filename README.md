@@ -37,7 +37,7 @@ Use the same file-input pipeline directly:
 
 Configuration is strict JSON, not YAML. Source paths and config output paths resolve relative to the config file; `--out` resolves relative to the current directory. CLI flags override config values. `--out - --format json` emits only JSON, suitable for scripts. `--demo` is explicit; running without config does not silently switch to demo.
 
-Exit codes: **0** no findings, **1** config/input/network/output error, **2** discrepancies, **3** unresolved evidence (takes precedence when both exist). Read report totals for mixed results. Ingestion errors produce no new report and a nonzero exit; an older report file may still exist, so always check the exit code. `go run` can wrap nonzero exit statuses; use the built binary in automation.
+Exit codes: **0** no discrepancies or unknowns, **1** execution error (config/input/network/output), **2** discrepancies without unknowns, **3** one or more unknowns, including mixed results (takes precedence when unknowns exist). Read report totals for mixed results. Ingestion errors produce no new report and a nonzero exit; an older report file may still exist, so always check the exit code. `go run` can wrap nonzero exit statuses; use the built binary in automation.
 
 A **[reconciliation dashboard](dashboard/)** is included: open `dashboard/index.html` in a browser and drag-drop the JSON report to visualize matches, discrepancies, and unknowns with search and charts.
 

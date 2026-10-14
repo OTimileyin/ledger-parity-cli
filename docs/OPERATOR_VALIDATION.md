@@ -32,7 +32,7 @@ must include:
 | Field | Description |
 |---|---|
 | `asset_issuer` | Issuer public key for credit assets (required if `asset_type` is not `"native"`) |
-| `operation_id` | Operation ID (recommended for disambiguation) |
+| `operation_id` | Operation ID (recommended for disambiguation; not universally required for unique payments under complete coverage) |
 | `reference_id` | Transaction hash (not memo) |
 | `settlement_start` | Start of explicit settlement interval (RFC3339) |
 | `settlement_end` | End of explicit settlement interval (RFC3339) |
@@ -75,7 +75,7 @@ Provide the time window and accounts to reconcile:
     "name": "your-app-name",
     "format": "json",
     "source_path": "path/to/your-export.json",
-    "complete": true
+    "complete": false
   },
   "stellar": {
     "network": "your-network-passphrase",
@@ -88,6 +88,9 @@ Provide the time window and accounts to reconcile:
   }
 }
 ```
+
+> **Note on `complete` assertion:**
+> The default completeness assertion is `complete: false`, which conservatively treats unobserved payments as `UNKNOWN`. Setting `complete: true` asserts that the export contains every single payment transaction conducted by the subject account(s) within the declared interval, with zero omissions. To legitimately assert completeness, the operator must provide independent proof of exhaustive database extraction confirming that all payment state transitions for the account were extracted without user-level, status-level, or batch-level filtering.
 
 ### 3. Known discrepancy (optional but valuable)
 

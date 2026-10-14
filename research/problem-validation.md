@@ -53,7 +53,7 @@ Manual reconciliation workflows introduce significant operational overhead and t
 1. **Engineering and Operational Triage Burden**:
    Resolving payment discrepancies manually requires cross-functional coordination between support clerks, database administrators, and blockchain engineers to inspect Horizon logs, raw transaction envelopes, and database state.
 2. **Extended Investigation Cycles**:
-   Manual investigation of unconfirmed or disputed payouts routinely extends resolution cycles by 24 to 72 hours, delaying beneficiary access to funds and increasing support backlog.
+   Manual investigation of unconfirmed or disputed payouts extends resolution cycles, delaying beneficiary access to funds and increasing support backlog.
 3. **Irreversible Capital Losses**:
    On non-custodial blockchains like Stellar, duplicate payouts or overpayments caused by uncoordinated retries are generally irreversible unless the recipient voluntarily returns the funds. Undetected duplicate payments lead directly to unrecoverable capital losses.
 
@@ -65,8 +65,8 @@ Generic reconciliation algorithms that treat payments as simple strings fail on 
    Every Stellar transaction envelope is cryptographically bound to a network passphrase (`Public Global Stellar Network ; September 2015` for Mainnet, `Test SDF Network ; September 2015` for Testnet). An export claiming settlement on Mainnet must never match an observation from Testnet. LedgerParity treats the network passphrase as an immutable component of payment identity.
 
 2. **Operation IDs vs Transaction Hashes**:
-   A single Stellar transaction can bundle up to 100 distinct operations. Identifying payments solely by transaction hash causes ambiguity when multiple payments are grouped into a single batch transaction. 
-   Operation IDs are not universally required for all single classic payments with distinct amounts and counterparties. However, the 64-bit Stellar Operation ID (encoding ledger sequence, transaction index, and operation index) is strongly recommended for disambiguation. Without an explicit operation ID, multi-operation batch payments or payments evaluated under incomplete coverage cannot be unambiguously matched and must remain UNKNOWN.
+   A single Stellar transaction can bundle up to 100 distinct operations. Identifying payments solely by transaction hash causes ambiguity when multiple payments are grouped into a single batch transaction.
+   Operation IDs are recommended for disambiguation rather than universally required. For single distinct classic payments with unique counterparties and amounts evaluated over a complete coverage window, LedgerParity matches records without an operation ID. However, the 64-bit Stellar Operation ID (encoding ledger sequence, transaction index, and operation index) is strongly recommended whenever multiple candidate operations share identical attributes or when reconciliation is evaluated under incomplete coverage windows. Without an explicit operation ID, multi-operation batch payments or payments evaluated under incomplete coverage cannot be unambiguously matched and must remain UNKNOWN.
 
 3. **Triple Asset Identity (Type, Code, Issuer)**:
    Unlike single-token chains, Stellar assets are uniquely defined as a triple:
@@ -115,7 +115,7 @@ LedgerParity is decoupled into distinct modules:
 4. **Offline Dashboard**:
    A zero-dependency, single-file HTML viewer (`dashboard/index.html`) runs directly in any modern browser without an active web server, allowing finance teams to inspect reports, search candidate operations, and review coverage without technical setup.
 5. **Decoupled Hash Registry**:
-   An optional Soroban report-hash contract (`https://github.com/LedgerParity/-ledger-parity-contract`) exists as an independent external registry. The CLI does not invoke this contract during reconciliation, preserving the principle that on-chain hash registration proves only an administrator's record commitment, not the factual accuracy of the underlying payment data.
+   An optional Soroban report-hash contract (`https://github.com/LedgerParity/ledger-parity-contract`) exists as an independent external registry. The CLI does not invoke this contract during reconciliation, preserving the principle that on-chain hash registration proves only an administrator's record commitment, not the factual accuracy of the underlying payment data.
 
 ## 9. Comparison with Existing Stellar Tooling
 

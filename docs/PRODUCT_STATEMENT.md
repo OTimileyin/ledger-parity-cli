@@ -14,7 +14,7 @@ LedgerParity is a dedicated, read-only reconciliation tool that compares interna
    - Matches internal payment records against Horizon ledger operations using exact decimal amounts (7 decimal places, stroop-level precision).
    - Enforces triple asset identity (AssetType, AssetCode, and AssetIssuer), preventing spoofed or counterfeit token matches.
    - Evaluates network passphrases strictly, ensuring Testnet operations are never confused with Mainnet settlements.
-   - Recommends 64-bit Stellar Operation IDs for unambiguous candidate matching in multi-operation transactions and under incomplete coverage windows.
+   - Recommends 64-bit Stellar Operation IDs for disambiguation in multi-operation transactions and under incomplete coverage windows, rather than universally requiring them for all single classic payments.
 
 2. **Conservative Discrepancy Classification**:
    - Classifies records as `EXACT` when amount, asset, sender, recipient, and exact timestamp match.
@@ -45,6 +45,6 @@ LedgerParity is a dedicated, read-only reconciliation tool that compares interna
 
 - **No Transaction Submission or Signing**: LedgerParity does not hold private keys, manage custody, or submit transactions to the network.
 - **No Path Payments or Soroban Events**: Ingestion is currently restricted to classic payment operations (`payment`). Path payments and Soroban smart contract invocations are outside current scope.
-- **No Cryptographic Blockchain Verification**: LedgerParity queries Horizon HTTP endpoints. Horizon is an off-chain API indexing service, not an infallible cryptographic oracle. Local `.proof.json` files authenticate only local report file integrity against modification; they do not authenticate the truth of the underlying payment records.
+- **No Cryptographic Blockchain Verification**: LedgerParity queries Horizon HTTP endpoints. Horizon is an off-chain API indexing service, not an infallible cryptographic oracle. Local `.proof.json` files authenticate only local report file integrity against modification; they do not authenticate the truth of the underlying payment records or cryptographically verify the blockchain.
 - **No Automated Dispute Resolution**: The tool reports discrepancies; it does not alter database states or trigger automated refunds.
-- **No Dependency on Smart Contracts**: While an optional Soroban report-hash contract exists in a separate repository (`-ledger-parity-contract`), the CLI does not invoke it. Hash registration on-chain proves only an authorized digest commitment, not the factual truth of underlying payment data.
+- **No Dependency on Smart Contracts**: While an optional Soroban report-hash contract exists in a separate repository (`ledger-parity-contract`), the CLI does not invoke it. Hash registration on-chain proves only an authorized digest commitment, not the factual truth of underlying payment data.

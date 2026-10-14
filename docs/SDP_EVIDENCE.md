@@ -8,7 +8,7 @@ go build -o ledger-parity ./cmd/ledger-parity
 ./ledger-parity --replay sdp-evidence.json --out replayed-report.json
 ```
 
-Both reconciliation and replay exit **3**: the synthetic example has **1 match, 1 amount discrepancy, 1 unknown batch**. Other exits remain 0 (no findings), 1 (input/runtime/output/integrity error), 2 (discrepancies without unknowns). An unknown is not a financial discrepancy. A bundle path must be new; choose another name on repeated runs. Replay uses no configuration, original source files or network calls. It verifies the bundle digest, reruns the engine and requires the stored report to agree. A changed engine that produces different findings fails replay explicitly.
+Both reconciliation and replay exit **3**: the synthetic example has **1 match, 1 amount discrepancy, 1 unknown batch**. Other exits remain 0 (no discrepancies or unknowns), 1 (execution error), 2 (discrepancies without unknowns), and 3 (one or more unknowns, including mixed results). An unknown is not a financial discrepancy. A bundle path must be new; choose another name on repeated runs. Replay uses no configuration, original source files or network calls. It verifies the bundle digest, reruns the engine and requires the stored report to agree. A changed engine that produces different findings fails replay explicitly.
 
 The CSV is shaped against SDP release 7.0.0, not exported from a deployed operator. Addresses, references, amounts and findings in examples/sdp are synthetic. The source contract is documented in [connectors](https://github.com/LedgerParity/ledger-parity-connectors/blob/main/docs/SDP.md).
 

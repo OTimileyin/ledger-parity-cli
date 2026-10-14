@@ -6,7 +6,7 @@ Repository: LedgerParity/ledger-parity-cli
 
 ## 1. Overview and Scope
 
-This runbook defines the operational procedure for executing an external operator reconciliation pilot using LedgerParity CLI. It reconciles the requirements in `docs/OPERATOR_VALIDATION.md` and `docs/SDP.md` with the underlying Go source code in `ledger-parity-core` and `ledger-parity-connectors`.
+This runbook defines the operational procedure for executing an external operator reconciliation pilot using LedgerParity CLI. It reconciles the requirements in `docs/OPERATOR_VALIDATION.md` (in this repository) and `docs/SDP.md` (in repository `ledger-parity-connectors`, or `docs/SDP_EVIDENCE.md` for CLI usage) with the underlying Go source code in `ledger-parity-core` and `ledger-parity-connectors`.
 
 The reconciliation tool is read-only. It inspects Stellar classic payment operations and compares them with internal application payment records. It never signs transactions, never requests private keys, and never initiates funds movement.
 
@@ -72,38 +72,48 @@ Before running reconciliation, the operator and evaluator must agree on:
 
 ## 4. Test Controls and Expected Classifications
 
-To verify that the engine behaves accurately on real data, every pilot run must establish clear control baselines. Classifications depend strictly on timestamp tolerance, explicit operation identity, and coverage completeness:
+To verify that the engine behaves accurately on real data, every pilot run must establish clear control baselines. Classifications depend strictly on timestamp tolerance, explicit operation identity, and coverage completeness. Operation IDs are recommended for disambiguation rather than universally required; unique payments evaluated under complete coverage match successfully without an operation ID.
 
 ### 1. Positive Controls
 - **Exact Timestamp Match**:
-  Internal record matches on-chain payment in amount, asset, sender, recipient, and the timestamp matches exactly.
-  Expected classification: Status `EXACT`, discrepancy `NONE`.
+  Internal record matches on-chain payment in amount, asset, sender, and recipient, and the timestamp matches exactly (`time_delta_sec == 0`).
+  - With explicit `operation_id` OR complete coverage (`complete: true`): Expected classification: Status `EXACT`, discrepancy `NONE`, `time_delta_sec: 0`.
+  - With omitted `operation_id` AND incomplete coverage (`complete: false`, the default): Expected classification: Status `UNKNOWN`, discrepancy `UNRESOLVED` ("Candidate observed but full matching window is unproven; supply operation ID").
 - **Tolerant Timestamp Match**:
   Internal record matches on-chain payment in amount, asset, sender, and recipient, but timestamps differ within `timeframe_tolerance_sec`.
-  Expected classification: Status `TOLERANT`, discrepancy `NONE`, with `time_delta_sec` populated.
-- **Incomplete Coverage Effect on Positive Controls**:
-  If explicit `operation_id` is omitted AND the coverage window is incomplete (`complete: false`), the engine classifies the candidate observation as `UNKNOWN` ("Candidate observed but full matching window is unproven; supply operation ID"). Therefore, under default incomplete coverage (`complete: false`), positive controls require an explicit `operation_id` to achieve `EXACT` or `TOLERANT` matching.
+  - With explicit `operation_id` OR complete coverage (`complete: true`): Expected classification: Status `TOLERANT`, discrepancy `NONE`, with `time_delta_sec` populated with the absolute difference in seconds.
+  - With omitted `operation_id` AND incomplete coverage (`complete: false`, the default): Expected classification: Status `UNKNOWN`, discrepancy `UNRESOLVED` ("Candidate observed but full matching window is unproven; supply operation ID").
 
 ### 2. Negative Controls (Intentional Discrepancies)
 - **Delivered Amount Mismatch**:
   Internal record claims an amount that differs from the on-chain delivered amount.
-  - If explicit identity (`operation_id` or `reference_id` transaction hash) is supplied: Expected classification: Status `DISCREPANCY`, discrepancy `AMOUNT_MISMATCH`.
+  - If explicit identity (`operation_id` or `reference_id` transaction hash) is supplied: Expected classification: Status `DISCREPANCY`, discrepancy `AMOUNT_MISMATCH` ("Explicit identity matched; delivered amount differs"), with `amount_delta` populated.
   - If explicit identity is omitted: Expected classification: Status `UNKNOWN`, discrepancy `UNRESOLVED` ("Nearby payment has a different amount; no explicit identity proves its relationship").
 - **Missing On-Chain Payment**:
-  Internal record marks a payment completed, but no corresponding operation exists on-chain.
-  - If coverage is complete (`complete: true`): Expected classification: Status `DISCREPANCY`, discrepancy `MISSING_ON_CHAIN`.
+  Internal record marks a payment completed, but no corresponding operation exists on-chain within the covered candidate window.
+  - If coverage is complete (`complete: true`): Expected classification: Status `DISCREPANCY`, discrepancy `MISSING_ON_CHAIN` ("No matching ordinary payment in the covered candidate window").
   - If coverage is incomplete (`complete: false`, the default): Expected classification: Status `UNKNOWN`, discrepancy `UNRESOLVED` ("No settlement found; status or coverage does not justify absence").
 - **Duplicate Internal Submission**:
-  The export contains multiple internal records sharing the same internal ID.
-  Expected classification: Status `DISCREPANCY`, discrepancy `DUPLICATE_INTERNAL`.
+  The export contains multiple internal records sharing the same internal ID (`SourceApp` + `ID`).
+  Expected classification: Status `DISCREPANCY`, discrepancy `DUPLICATE_INTERNAL` ("Repeated internal ID within source").
+- **Internal Status Mismatch**:
+  Settlement is observed on-chain with matching identity, but internal status is not completed/success/settled (such as pending or failed).
+  Expected classification: Status `DISCREPANCY`, discrepancy `STATUS_MISMATCH` ("Settlement observed but internal status is not completed/success/settled").
 
 ### 3. Ambiguity Controls
 - **Multiple Candidate Operations**:
-  Two or more on-chain operations match the payment parameters within the timeframe tolerance, and the internal record lacks an `operation_id`.
+  Two or more on-chain operations match the payment parameters within the timeframe tolerance, and the internal record lacks an `operation_id` to disambiguate them.
   Expected classification: Status `UNKNOWN`, discrepancy `UNRESOLVED` ("Multiple candidate operations; supply an operation ID").
 - **Multiple Internal Claims**:
   Two or more internal records claim the same on-chain operation.
   Expected classification: Status `UNKNOWN`, discrepancy `UNRESOLVED` ("Multiple internal records claim this operation").
+- **Unclaimed On-Chain Operation**:
+  An on-chain payment operation exists on the monitored account within the reconciliation interval, but no internal record claims it.
+  - If internal export coverage is complete (`target_app.complete: true`): Expected classification: Status `DISCREPANCY`, discrepancy `ORPHANED_ON_CHAIN` ("No claim in operator-declared complete export").
+  - If internal export coverage is incomplete (`target_app.complete: false`, the default): Expected classification: Status `UNKNOWN`, discrepancy `UNRESOLVED` ("Unclaimed observation; export completeness/scope unproven").
+- **Failed On-Chain Transaction**:
+  An on-chain transaction matching payment parameters failed during ledger execution (`Successful: false`).
+  Expected classification: Status `UNKNOWN`, discrepancy `UNRESOLVED` ("Failed transaction is not settlement").
 
 ### 4. Separation of Artificial Test Discrepancies from Operator Findings
 The discrepancies observed in the built-in offline demo (`--demo`) and SDP test fixtures (`examples/sdp/`) are artificial regression fixtures engineered to verify engine logic. They must never be described as genuine operator findings. Genuine operator findings can only be documented after a consenting operator runs their actual export through this runbook.
